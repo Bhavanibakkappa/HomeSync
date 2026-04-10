@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>HomeSync – Device Status</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        nav { background: #1a1a2e; padding: 14px 28px;
+              display: flex; align-items: center; justify-content: space-between; }
+        nav a { color: #bbb; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        nav a:hover { color: white; }
+        .container { max-width: 600px; margin: 32px auto; padding: 0 20px; }
+        h2 { color: #1a1a2e; margin-bottom: 20px; }
+        .card { background: white; border-radius: 8px; padding: 28px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .row { display: flex; margin-bottom: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 14px; }
+        .label { width: 130px; font-weight: 600; color: #555; font-size: 14px; }
+        .value { color: #222; font-size: 14px; }
+        .badge { padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+        .badge-on  { background: #d4edda; color: #155724; }
+        .badge-off { background: #e2e3e5; color: #383d41; }
+        .btn { padding: 8px 18px; background: #6c757d; color: white;
+               border: none; border-radius: 5px; cursor: pointer;
+               text-decoration: none; display: inline-block; font-size: 14px; }
+    </style>
+</head>
+<body>
+<nav>
+    <span style="font-weight:bold; font-size:18px; color:white;">HomeSync</span>
+    <div>
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}">Schedules</a>
+        <a th:href="@{/logout}">Logout</a>
+    </div>
+</nav>
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Device Status</h2>
+        <a th:href="@{/devices}" class="btn">&#8592; Back</a>
+    </div>
+    <div class="card">
+        <div class="row">
+            <span class="label">Device Name</span>
+            <span class="value" th:text="${device.name}">Name</span>
+        </div>
+        <div class="row">
+            <span class="label">Type</span>
+            <span class="value" th:text="${device.deviceType}">Type</span>
+        </div>
+        <div class="row">
+            <span class="label">Location</span>
+            <span class="value" th:text="${device.location}">Location</span>
+        </div>
+        <div class="row">
+            <span class="label">Status</span>
+            <span th:class="'badge ' + (${device.status.name() == 'ON'} ? 'badge-on' : 'badge-off')"
+                  th:text="${device.status}">OFF</span>
+        </div>
+        <div class="row">
+            <span class="label">Owner</span>
+            <span class="value" th:text="${device.owner?.username}">owner</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
