@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>HomeSync – Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        nav { background: #1a1a2e; color: white; padding: 14px 28px;
+              display: flex; align-items: center; justify-content: space-between; }
+        nav a { color: #bbb; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        nav a:hover { color: white; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+        h2 { color: #1a1a2e; margin-bottom: 24px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 10px; padding: 28px 24px;
+                box-shadow: 0 1px 5px rgba(0,0,0,0.08); text-align: center;
+                text-decoration: none; color: inherit; transition: box-shadow 0.2s; }
+        .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.13); }
+        .card .icon { font-size: 36px; margin-bottom: 12px; }
+        .card h3 { font-size: 16px; color: #1a1a2e; margin-bottom: 6px; }
+        .card p  { font-size: 13px; color: #777; }
+        .welcome { background: white; border-radius: 10px; padding: 24px 28px;
+                   box-shadow: 0 1px 5px rgba(0,0,0,0.08); margin-bottom: 28px; }
+        .welcome h2 { margin-bottom: 4px; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px;
+                 font-size: 12px; font-weight: 600; background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <span style="font-weight:bold; font-size:18px;">HomeSync</span>
+    <div>
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}">Schedules</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Admin</a>
+        <a th:href="@{/profile}">Profile</a>
+        <a th:href="@{/logout}">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="welcome">
+        <h2>Welcome, <span th:text="${currentUser?.fullName ?: currentUser?.username}">User</span></h2>
+        <span class="badge" th:text="${currentUser?.role}">RESIDENT</span>
+    </div>
+
+    <div class="cards">
+        <a class="card" th:href="@{/devices}">
+            <div class="icon">&#128161;</div>
+            <h3>Devices</h3>
+            <p>Add, remove and control your smart devices</p>
+        </a>
+        <a class="card" th:href="@{/security}">
+            <div class="icon">&#128272;</div>
+            <h3>Security</h3>
+            <p>Arm, disarm and monitor your home security</p>
+        </a>
+        <a class="card" th:href="@{/schedules}">
+            <div class="icon">&#128336;</div>
+            <h3>Schedules</h3>
+            <p>Automate your devices with custom routines</p>
+        </a>
+        <a class="card" sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">
+            <div class="icon">&#128100;</div>
+            <h3>User Management</h3>
+            <p>Manage accounts and roles (Admin only)</p>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
