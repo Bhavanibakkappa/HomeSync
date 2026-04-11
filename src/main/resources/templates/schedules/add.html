@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Schedule – HomeSync</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+        .navbar {
+            background: #1a1a2e; color: white;
+            padding: 14px 32px; display: flex;
+            align-items: center; justify-content: space-between;
+        }
+        .navbar .brand { font-size: 1.3rem; font-weight: 700; }
+        .navbar .nav-links a {
+            color: #ccc; text-decoration: none;
+            margin-left: 20px; font-size: 0.9rem;
+        }
+        .navbar .nav-links a:hover { color: white; }
+        .logout-btn {
+            background: #e74c3c; color: white; border: none;
+            padding: 7px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 0.85rem; margin-left: 20px;
+        }
+
+        .container { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        .card {
+            background: white; border-radius: 12px;
+            padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card-title {
+            font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 24px; color: #1a1a2e;
+        }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block; font-size: 0.85rem;
+            font-weight: 600; color: #555; margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid #ddd; border-radius: 7px;
+            font-size: 0.9rem; outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-color: #f5a623; }
+        .form-group small { color: #999; font-size: 0.78rem; margin-top: 4px; display: block; }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 10px; }
+        .btn {
+            padding: 10px 24px; border: none;
+            border-radius: 7px; font-size: 0.9rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .btn-primary { background: #f5a623; color: white; }
+        .btn-secondary { background: #6c757d; color: white; text-decoration: none; display: inline-flex; align-items: center; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="brand">🏠 HomeSync</div>
+    <div class="nav-links">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}">Schedules</a>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <button class="logout-btn" type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="card-title">📅 Add New Schedule</div>
+
+        <form th:action="@{/schedules/add}" method="post">
+            <div class="form-group">
+                <label>Task Name *</label>
+                <input type="text" name="taskName" placeholder="e.g. Living Room Lights Off" required/>
+            </div>
+
+            <div class="form-group">
+                <label>Action *</label>
+                <select name="action" required>
+                    <option value="">-- Select Action --</option>
+                    <option th:each="a : ${actions}" th:value="${a}" th:text="${a}"></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Scheduled Time</label>
+                <input type="time" name="scheduledTime"/>
+                <small>Leave blank if no specific time needed.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Days of Week</label>
+                <input type="text" name="daysOfWeek" placeholder="e.g. MON,TUE,WED or ALL"/>
+                <small>Comma-separated: MON, TUE, WED, THU, FRI, SAT, SUN</small>
+            </div>
+
+            <div class="form-group">
+                <label>Linked Device (optional)</label>
+                <select name="deviceId">
+                    <option value="">-- No Device --</option>
+                    <option th:each="d : ${devices}"
+                            th:value="${d.id}"
+                            th:text="${d.name + ' — ' + d.location}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Create Schedule</button>
+                <a th:href="@{/schedules}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

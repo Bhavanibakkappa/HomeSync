@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Schedule Automation – HomeSync</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+        /* ── Navbar ── */
+        .navbar {
+            background: #1a1a2e; color: white;
+            padding: 14px 32px; display: flex;
+            align-items: center; justify-content: space-between;
+        }
+        .navbar .brand { font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; }
+        .navbar .nav-links a {
+            color: #ccc; text-decoration: none;
+            margin-left: 20px; font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .navbar .nav-links a:hover { color: white; }
+        .navbar .nav-links a.active { color: #f5a623; font-weight: 600; }
+        .logout-btn {
+            background: #e74c3c; color: white; border: none;
+            padding: 7px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 0.85rem; margin-left: 20px;
+        }
+
+        /* ── Layout ── */
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+        .page-subtitle { color: #777; font-size: 0.9rem; margin-bottom: 24px; }
+
+        /* ── Alert messages ── */
+        .alert {
+            padding: 12px 18px; border-radius: 8px;
+            margin-bottom: 18px; font-size: 0.9rem;
+        }
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #e74c3c; }
+
+        /* ── Cards ── */
+        .card {
+            background: white; border-radius: 12px;
+            padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 1.1rem; font-weight: 600;
+            margin-bottom: 18px; color: #1a1a2e;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── Quick Add Form ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px; margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block; font-size: 0.82rem;
+            font-weight: 600; color: #555; margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%; padding: 9px 12px;
+            border: 1px solid #ddd; border-radius: 7px;
+            font-size: 0.9rem; outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-color: #f5a623; }
+
+        .btn {
+            padding: 9px 20px; border: none;
+            border-radius: 7px; font-size: 0.9rem;
+            cursor: pointer; font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.88; }
+        .btn-primary { background: #f5a623; color: white; }
+        .btn-danger  { background: #e74c3c; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+        /* ── Schedule table ── */
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: #1a1a2e; color: white;
+            padding: 11px 14px; font-size: 0.85rem;
+            text-align: left;
+        }
+        tbody tr { border-bottom: 1px solid #f0f0f0; }
+        tbody tr:hover { background: #fafafa; }
+        tbody td { padding: 11px 14px; font-size: 0.88rem; }
+
+        .badge {
+            display: inline-block; padding: 3px 9px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-active   { background: #d4edda; color: #155724; }
+        .badge-inactive { background: #f8d7da; color: #721c24; }
+
+        .actions-row { display: flex; gap: 6px; }
+        .empty-state {
+            text-align: center; padding: 40px;
+            color: #aaa; font-size: 0.95rem;
+        }
+        .undo-section { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="brand">🏠 HomeSync</div>
+    <div class="nav-links">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}" class="active">Schedules</a>
+        <a th:href="@{/auth/profile}">Profile</a>
+        <span sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/admin/users}">Users</a>
+        </span>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <button class="logout-btn" type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="page-title">📅 Schedule Automation</div>
+    <div class="page-subtitle">
+        Automate your smart devices — Adapter Pattern routes notifications to external service.
+    </div>
+
+    <!-- Flash messages -->
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-error"   th:if="${error}"   th:text="${error}"></div>
+
+    <!-- Quick Add Schedule Form -->
+    <div class="card">
+        <div class="card-title">➕ Create New Schedule</div>
+        <form th:action="@{/schedules/add}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Task Name *</label>
+                    <input type="text" name="taskName" placeholder="e.g. Lights Off" required/>
+                </div>
+                <div class="form-group">
+                    <label>Action *</label>
+                    <select name="action" required>
+                        <option value="">-- Select --</option>
+                        <option th:each="a : ${actions}" th:value="${a}" th:text="${a}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Time (HH:mm)</label>
+                    <input type="time" name="scheduledTime"/>
+                </div>
+                <div class="form-group">
+                    <label>Days (e.g. MON,TUE)</label>
+                    <input type="text" name="daysOfWeek" placeholder="MON,WED,FRI"/>
+                </div>
+                <div class="form-group">
+                    <label>Device (optional)</label>
+                    <select name="deviceId">
+                        <option value="">-- None --</option>
+                        <option th:each="d : ${devices}"
+                                th:value="${d.id}"
+                                th:text="${d.name + ' (' + d.location + ')'}">
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Schedule</button>
+        </form>
+    </div>
+
+    <!-- Schedules Table -->
+    <div class="card">
+        <div class="card-title">📋 My Schedules</div>
+
+        <!-- Undo Last button -->
+        <div class="undo-section">
+            <form th:action="@{/schedules/undo}" method="post">
+                <button type="submit" class="btn btn-secondary btn-sm">↩ Undo Last Schedule</button>
+            </form>
+        </div>
+
+        <div th:if="${schedules == null or schedules.isEmpty()}" class="empty-state">
+            No schedules yet. Create one above to automate your devices!
+        </div>
+
+        <table th:if="${schedules != null and !schedules.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Task Name</th>
+                    <th>Action</th>
+                    <th>Time</th>
+                    <th>Days</th>
+                    <th>Device</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s, stat : ${schedules}">
+                    <td th:text="${stat.count}"></td>
+                    <td th:text="${s.taskName}"></td>
+                    <td th:text="${s.action}"></td>
+                    <td th:text="${s.scheduledTime != null ? s.scheduledTime : '—'}"></td>
+                    <td th:text="${s.daysOfWeek != null ? s.daysOfWeek : 'ALL'}"></td>
+                    <td th:text="${s.device != null ? s.device.name : '—'}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${s.active} ? 'badge-active' : 'badge-inactive'"
+                              th:text="${s.active} ? 'Active' : 'Inactive'">
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions-row">
+                            <!-- Toggle active/inactive -->
+                            <form th:action="@{'/schedules/' + ${s.id} + '/toggle'}" method="post">
+                                <button type="submit" class="btn btn-secondary btn-sm"
+                                        th:text="${s.active} ? 'Deactivate' : 'Activate'">
+                                </button>
+                            </form>
+                            <!-- Delete (admin only) -->
+                            <form th:action="@{'/schedules/' + ${s.id} + '/delete'}" method="post"
+                                  sec:authorize="hasRole('ADMIN')">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete this schedule?')">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>
