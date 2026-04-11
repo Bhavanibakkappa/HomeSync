@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>HomeSync – Security</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        nav { background: #1a1a2e; color: white; padding: 14px 28px;
+              display: flex; align-items: center; justify-content: space-between; }
+        nav a { color: #bbb; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        nav a:hover { color: white; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+        h2 { color: #1a1a2e; margin-bottom: 20px; }
+        h3 { color: #1a1a2e; margin-bottom: 14px; }
+
+        /* Alerts */
+        .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-warning { background: #fff3cd; color: #856404; }
+        .alert-danger  { background: #f8d7da; color: #721c24; }
+
+        /* Status cards row */
+        .status-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+                      gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 8px; padding: 20px 18px;
+                     box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
+        .stat-card .icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-card .label { font-size: 12px; color: #777; text-transform: uppercase;
+                            letter-spacing: 0.04em; margin-bottom: 4px; }
+        .stat-card .value { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+
+        /* Control panel card */
+        .card { background: white; border-radius: 8px; padding: 24px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
+
+        /* Form rows inside the control card */
+        .control-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+        .control-row:last-child { margin-bottom: 0; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600;
+                            color: #555; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 9px 12px; border: 1px solid #ddd;
+                            border-radius: 5px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: #3498db; }
+
+        /* Buttons */
+        .btn { padding: 9px 18px; border: none; border-radius: 5px;
+               cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+        .btn-arm      { background: #f39c12; color: white; }
+        .btn-arm:hover{ background: #d68910; }
+        .btn-disarm   { background: #27ae60; color: white; }
+        .btn-disarm:hover { background: #1e8449; }
+        .btn-trigger  { background: #e74c3c; color: white; }
+        .btn-trigger:hover { background: #c0392b; }
+        .btn-reset    { background: #3498db; color: white; }
+        .btn-reset:hover { background: #2980b9; }
+        .btn-danger   { background: #e74c3c; color: white; padding: 6px 12px; font-size: 12px; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary { background: #7f8c8d; color: white; }
+
+        /* Divider inside card */
+        .section-divider { border: none; border-top: 1px solid #eee; margin: 20px 0; }
+
+        /* Log table */
+        table { width: 100%; border-collapse: collapse; background: white;
+                border-radius: 8px; overflow: hidden;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        thead { background: #1a1a2e; color: white; }
+        th, td { padding: 11px 14px; text-align: left; font-size: 14px; }
+        tr:nth-child(even) td { background: #f9f9f9; }
+
+        /* Badges for states */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px;
+                 font-size: 12px; font-weight: 600; }
+        .badge-DISARMED           { background: #d4edda; color: #155724; }
+        .badge-ARMED              { background: #fff3cd; color: #856404; }
+        .badge-INTRUSION_DETECTED { background: #f8d7da; color: #721c24; }
+        .badge-ALARM_ACTIVE       { background: #f5c6cb; color: #491217; }
+        .badge-ALERT_SENT         { background: #e2d9f3; color: #4a235a; }
+        .badge-RESET              { background: #d4edda; color: #155724; }
+
+        .empty { text-align: center; color: #999; padding: 24px; font-size: 14px; }
+        .view-all-link { font-size: 13px; color: #3498db; text-decoration: none; float: right; }
+        .view-all-link:hover { text-decoration: underline; }
+
+        /* Observer pattern note — visible for viva */
+        .pattern-note { font-size: 11px; color: #aaa; font-style: italic; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <span style="font-weight:bold; font-size:18px;">HomeSync</span>
+    <div>
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}">Schedules</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Admin</a>
+        <a th:href="@{/profile}">Profile</a>
+        <a th:href="@{/logout}">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h2>🔒 Security Dashboard</h2>
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${warning}" class="alert alert-warning" th:text="${warning}"></div>
+    <div th:if="${error}"   class="alert alert-danger"  th:text="${error}"></div>
+
+    <!-- Status summary cards -->
+    <div class="status-row">
+        <div class="stat-card">
+            <div class="icon">🛡️</div>
+            <div class="label">Current State</div>
+            <div class="value"
+                 th:text="${currentState != null} ? ${currentState.state} : 'DISARMED'">
+                DISARMED
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">📋</div>
+            <div class="label">Total Events</div>
+            <div class="value" th:text="${logs != null} ? ${logs.size()} : 0">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">⏰</div>
+            <div class="label">Last Event</div>
+            <div class="value" style="font-size:13px;"
+                 th:text="${currentState != null} ? ${#temporals.format(currentState.timestamp, 'HH:mm, dd MMM')} : 'None'">
+                None
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <!--
+        OBSERVER PATTERN in action here:
+        Each button POST → SecurityController → SecurityService.triggerAlert()
+        → notifyObservers() → LoggingAlertObserver saves to DB
+                            → ExternalServiceAlertObserver notifies external API
+        SecurityService does NOT know which observers exist — pure DIP.
+    -->
+    <div class="card">
+        <h3>⚙️ System Controls</h3>
+        <p class="pattern-note">Observer pattern fires on every action below — both LoggingAlertObserver and ExternalServiceAlertObserver are notified automatically.</p>
+        <hr class="section-divider"/>
+
+        <!-- ARM -->
+        <form th:action="@{/security/arm}" method="post">
+            <div class="control-row">
+                <div class="form-group">
+                    <label>Location to Arm</label>
+                    <input type="text" name="location"
+                           placeholder="e.g. Front Door, All Zones" required/>
+                </div>
+                <button type="submit" class="btn btn-arm">🔐 Arm System</button>
+            </div>
+        </form>
+
+        <!-- DISARM -->
+        <form th:action="@{/security/disarm}" method="post">
+            <div class="control-row">
+                <div class="form-group">
+                    <label>Location to Disarm</label>
+                    <input type="text" name="location"
+                           placeholder="e.g. Living Room, All Zones" required/>
+                </div>
+                <button type="submit" class="btn btn-disarm">🔓 Disarm System</button>
+            </div>
+        </form>
+
+        <!-- TRIGGER INTRUSION — Admin only -->
+        <div sec:authorize="hasRole('ADMIN')">
+            <form th:action="@{/security/trigger}" method="post">
+                <div class="control-row">
+                    <div class="form-group">
+                        <label>Simulate Intrusion At (Admin)</label>
+                        <input type="text" name="location"
+                               placeholder="e.g. Back Gate, Window 2" required/>
+                    </div>
+                    <button type="submit" class="btn btn-trigger"
+                            onclick="return confirm('Trigger intrusion alert?')">
+                        🚨 Trigger Intrusion
+                    </button>
+                </div>
+            </form>
+
+            <!-- RESET -->
+            <form th:action="@{/security/reset}" method="post">
+                <div class="control-row">
+                    <div class="form-group">
+                        <label>Reset System At (Admin)</label>
+                        <input type="text" name="location"
+                               placeholder="e.g. All Zones" required/>
+                    </div>
+                    <button type="submit" class="btn btn-reset">🔄 Reset System</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Logs -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h3 style="margin-bottom:0;">📋 Recent Security Events</h3>
+        <a th:href="@{/security/logs}" class="view-all-link">View all logs →</a>
+    </div>
+
+    <!-- Empty state -->
+    <table th:if="${logs == null or logs.isEmpty()}">
+        <thead><tr><th>ID</th><th>State</th><th>Description</th><th>Timestamp</th></tr></thead>
+        <tbody><tr><td colspan="4" class="empty">No security events recorded yet. Arm the system above to start.</td></tr></tbody>
+    </table>
+
+    <!-- Log table — shows latest 10 only on dashboard -->
+    <table th:if="${logs != null and !logs.isEmpty()}">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>State</th>
+                <th>Description</th>
+                <th>Timestamp</th>
+                <th sec:authorize="hasRole('ADMIN')">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="log,iter : ${logs}" th:if="${iter.index < 10}">
+                <td th:text="${log.id}">1</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="'badge-' + ${log.state}"
+                          th:text="${log.state}">ARMED</span>
+                </td>
+                <td th:text="${log.description}">Motion detected</td>
+                <td th:text="${#temporals.format(log.timestamp, 'dd-MM-yyyy HH:mm:ss')}">
+                    01-01-2024 12:00:00
+                </td>
+                <td sec:authorize="hasRole('ADMIN')">
+                    <form th:action="@{/security/delete/{id}(id=${log.id})}" method="post">
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Delete this log entry?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>
