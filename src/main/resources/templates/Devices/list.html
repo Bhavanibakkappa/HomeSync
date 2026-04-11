@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>HomeSync – Devices</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        nav { background: #1a1a2e; padding: 14px 28px;
+              display: flex; align-items: center; justify-content: space-between; }
+        nav a { color: #bbb; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        nav a:hover { color: white; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+        h2 { color: #1a1a2e; margin-bottom: 20px; }
+        .card { background: white; border-radius: 8px; padding: 24px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 11px 14px; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-on  { background: #d4edda; color: #155724; }
+        .badge-off { background: #e2e3e5; color: #383d41; }
+        .btn { padding: 6px 13px; border: none; border-radius: 4px;
+               cursor: pointer; font-size: 13px; margin-right: 4px; }
+        .btn-primary   { background: #3498db; color: white; }
+        .btn-danger    { background: #e74c3c; color: white; }
+        .btn-success   { background: #27ae60; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .alert { padding: 12px 16px; border-radius: 5px; margin-bottom: 16px; font-size: 14px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger  { background: #f8d7da; color: #721c24; }
+        input, select { padding: 8px 12px; border: 1px solid #ddd;
+                        border-radius: 5px; font-size: 14px; }
+        .form-inline { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <span style="font-weight:bold; font-size:18px; color:white;">HomeSync</span>
+    <div>
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <a th:href="@{/devices}">Devices</a>
+        <a th:href="@{/security}">Security</a>
+        <a th:href="@{/schedules}">Schedules</a>
+        <a th:href="@{/profile}">Profile</a>
+        <a th:href="@{/logout}">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h2>Device Management</h2>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert alert-danger"  th:text="${error}"></div>
+
+    <!-- Add Device Form -->
+    <div class="card">
+        <h3 style="margin-bottom:16px; color:#1a1a2e;">Add New Device</h3>
+        <form method="post" th:action="@{/devices/add}">
+            <div class="form-inline">
+                <div>
+                    <label>Device Type</label>
+                    <select name="type">
+                        <option th:each="t : ${deviceTypes}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label>Name</label>
+                    <input type="text" name="name" placeholder="e.g. Living Room Light" required/>
+                </div>
+                <div>
+                    <label>Location</label>
+                    <input type="text" name="location" placeholder="e.g. Living Room" required/>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top:20px;">Add Device</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Device List -->
+    <div class="card">
+        <h3 style="margin-bottom:16px; color:#1a1a2e;">Your Devices</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${devices.empty}">
+                    <td colspan="5" style="text-align:center; color:#999; padding:24px;">
+                        No devices added yet.
+                    </td>
+                </tr>
+                <tr th:each="device : ${devices}">
+                    <td th:text="${device.name}">Device Name</td>
+                    <td th:text="${device.deviceType}">Type</td>
+                    <td th:text="${device.location}">Location</td>
+                    <td>
+                        <span th:class="'badge ' + (${device.status.name() == 'ON'} ? 'badge-on' : 'badge-off')"
+                              th:text="${device.status}">OFF</span>
+                    </td>
+                    <td>
+                        <!-- Toggle ON -->
+                        <form method="post" th:action="@{/devices/{id}/toggle(id=${device.id})}" style="display:inline">
+                            <input type="hidden" name="action" value="ON"/>
+                            <button type="submit" class="btn btn-success">ON</button>
+                        </form>
+                        <!-- Toggle OFF -->
+                        <form method="post" th:action="@{/devices/{id}/toggle(id=${device.id})}" style="display:inline">
+                            <input type="hidden" name="action" value="OFF"/>
+                            <button type="submit" class="btn btn-secondary">OFF</button>
+                        </form>
+                        <!-- Remove -->
+                        <form method="post" th:action="@{/devices/{id}/remove(id=${device.id})}" style="display:inline"
+                              onsubmit="return confirm('Remove this device?')">
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                        </form>
+                        <!-- View Status -->
+                        <a th:href="@{/devices/{id}/status(id=${device.id})}" class="btn btn-primary">Status</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
